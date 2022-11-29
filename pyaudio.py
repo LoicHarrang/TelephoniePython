@@ -16,7 +16,7 @@ frames = []
   
 for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
     data = stream.read(CHUNK)
-    frames.append(data)  
+    frames.append(data)
 print ("Fin d'enregistrement")
 
 stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True)
