@@ -41,7 +41,7 @@ class Client:
             frames.append(data)
         print ("Fin d'enregistrement")
 
-        for octet in frames 
+        for octet in frames :
         
         frames = data.extend(bytearray(frames))
 
