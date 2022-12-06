@@ -23,7 +23,7 @@ class Client:
         except Exception as err:
             print("erreur : " + str(err))
     
-    def envoyer(self, b:list[bytes], address = ("127.0.0.1", 5001))-> None:
+    def envoyer(self, b:list[bytes], address = ("192.168.77.29", 5000))-> None:
         for byte in b:
             self.__socket_echange.sendto(byte, address)
 
@@ -33,18 +33,20 @@ class Client:
         print ("Enregistrement en cours...")
 
         frames : list = []
+        tab_bytes : bytearray = []
         
         for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
             data = stream.read(CHUNK)
-            print (data)
+            #print (data)
 
             frames.append(data)
         print ("Fin d'enregistrement")
 
         for octet in frames :
-            frames = data.extend(bytearray(frames))
+            tab_bytes.append(octet)
 
-        return frames
+        print(tab_bytes)
+        return tab_bytes
 
 if __name__ == "__main__":
 
