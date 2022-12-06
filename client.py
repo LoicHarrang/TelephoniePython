@@ -14,7 +14,7 @@ class Client:
     def __init__(self, ip_serveur: str, port_serveur: int) -> None:
         self.__ip_serveur = ip_serveur
         self.__port_serveur = port_serveur
-        self.__socket_echange = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.__socket_echange = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     def connexion(self) -> None:
         try:
@@ -23,7 +23,7 @@ class Client:
         except Exception as err:
             print("erreur : " + str(err))
     
-    def envoyer(self, b:list[bytes], address = ("192.168.77.29", 5000))-> None:
+    def envoyer(self, b:list[bytes], address = ("127.0.0.1", 5000))-> None:
         for byte in b:
             self.__socket_echange.sendto(byte, address)
 
@@ -51,13 +51,12 @@ class Client:
 if __name__ == "__main__":
 
     ip = "127.0.0.1"
-    port = 5001
-
+    port = 5000
     client : Client = None
 
     client = Client(ip,port)
     client.connexion()
-    frames = client.enregistrement()
-    client.envoyer(frames)
+   # frames = client.enregistrement()
+   # client.envoyer(frames)
 
    
