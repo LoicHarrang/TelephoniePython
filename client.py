@@ -24,8 +24,7 @@ class Client:
             print("erreur : " + str(err))
     
     def envoyer(self, b:list[bytes], address = ("127.0.0.1", 5000))-> None:
-        for byte in b:
-            self.__socket_echange.sendto(byte, address)
+        self.__socket_echange.send(b)
 
     
     def enregistrement(self):
@@ -45,7 +44,8 @@ class Client:
         for octet in frames :
             tab_bytes.append(octet)
 
-        print(tab_bytes)
+        bytearray(tab_bytes)
+        print(type(tab_bytes))
         return tab_bytes
 
 if __name__ == "__main__":
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     client = Client(ip,port)
     client.connexion()
-   # frames = client.enregistrement()
-   # client.envoyer(frames)
+    frames = client.enregistrement()
+    client.envoyer(frames)
 
    
