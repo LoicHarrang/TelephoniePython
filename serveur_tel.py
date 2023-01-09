@@ -7,7 +7,7 @@ class ChatServer:
 
         self.CONNECTION_LIST = []
         self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.chat_server_socket.bind(("127.0.0.1", 50000))
+        self.chat_server_socket.bind(("127.0.0.1", 50001))
         self.chat_server_socket.listen(5)
 
         self.CONNECTION_LIST.append(self.chat_server_socket)
@@ -25,7 +25,6 @@ class ChatServer:
     def run(self):
         while True:
             rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
-
             for current_socket in rlist:
                 if current_socket is self.chat_server_socket:
                     (new_socket, address) = self.chat_server_socket.accept()
@@ -34,6 +33,7 @@ class ChatServer:
                 else:
                     try:
                         data = current_socket.recv(1024)
+                        print(data.decode())
                         self.broadcast(current_socket, data)
                     except socket.error:
                         print("left the server")
