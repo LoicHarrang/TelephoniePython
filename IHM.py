@@ -1,12 +1,10 @@
 from tkinter import *
 import socket
-from typing import List
 import pyaudio
-import wave
 from threading import Thread
 from connexion import ClientTel
 from connexion import ChatServer
-import select
+from telephone import appel1
 
 class Fen_Principale(Tk):
 
@@ -163,18 +161,18 @@ class Fen_Principale(Tk):
 
 def appel(ip):
     global CHUNK
-    CHUNK = 1024 # 512
+    CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
-    RATE = 20000
+    RATE = 44100
     ip = ip.split()
     ip = ip[0]
     print(ip)
 
     global s
+    print(ip)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ip,60000))
-    
+    s.connect((ip,6000))
 
     thread_ecoute = Thread(target=receive_data)
     thread_enregistrer = Thread(target=send_data)
@@ -276,7 +274,7 @@ class Fen_Config(Toplevel):
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
-class GUIThread(Thread):
+class Affichage(Thread):
     def __init__(self):
         Thread.__init__(self)
         #ici ça ne marchera pas self.window=GUIInterface()
@@ -292,22 +290,35 @@ class GUIThread(Thread):
 class Tel(Thread):
     def __init__(self):
         Thread.__init__(self)
-        #ici ça ne marchera pas self.window=GUIInterface()
  
     def run(self):
-        #là ça marche
         ChatServer().run()
+
+class Tel(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+ 
+    def run(self):
+        ChatServer().run()
+
+class Tel1(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+ 
+    def run(self):
+        appel1()
 
 
 if __name__ == "__main__":
-    #ihm: Fen_Principale = Fen_Principale()
-    #ihm.mainloop()
-    #ChatServer().start
     try:
-        newGUIThread=GUIThread()
-        newGUIThread.start()
+        affichage=Affichage()
+        affichage.start()
         ecoutetel = Tel()
         ecoutetel.start()
-        print("thread lancé")
+        try:
+            tel = Tel1()
+            tel.start()
+        except:
+            pass
     except:
         print("erreur dans le programme")
