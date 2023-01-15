@@ -15,8 +15,7 @@ class ServeurTel:
         self.__socket_client: socket
         self.__service: ServiceEchange
 
-        self.__socket_serveur = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM)
+        self.__socket_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__socket_serveur.bind(("", self.__port))
         self.__socket_serveur.listen(1)
 
@@ -80,14 +79,14 @@ class ServiceEchange:
                 #Si bon format ajoute le tel dans la bdd avec l'@ de connexion
                 else:	
                     msg_serveur = "Ajout du tel"
+                    print(self.__socket_client)
                     try:
-                        ip = self.__socket_client.getsockname()
+                        ip = self.__socket_client.getpeername()
                         ip = ip[0]
                         conn = sqlite3.connect('bdd_client.sqlite')
                         cur = conn.cursor()
                         cur.execute('SELECT num from Utilisateurs where IP LIKE \'%' + ip + '%\'')
                         res = cur.fetchall()
-                        conn.close()
                         try:
                             res = res[0]
                             res = res[0]
@@ -103,7 +102,6 @@ class ServiceEchange:
                             cur.execute("""INSERT Into Utilisateurs (IP,num) VALUES (?,?)""",(ip,msg_client))
                             msg_serveur = 'ajoute'
                             conn.commit()
-                            conn.close()
                             fin_echange = True
 
 
@@ -136,7 +134,6 @@ class ServiceEchange:
                         print("Base de données crée et correctement connectée à SQLite")
                         cur.execute("""SELECT IP from Utilisateurs where num LIKE ?""",(msg_client,))
                         res = cur.fetchall()
-                        conn.close()
                         print(res)
                         try:
                             res = res[0]

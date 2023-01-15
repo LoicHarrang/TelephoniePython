@@ -99,8 +99,8 @@ class ChatServer:
 
         self.CONNECTION_LIST = []
         self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.chat_server_socket.bind(("127.0.0.1", 60000))
-        self.chat_server_socket.listen(5)
+        self.chat_server_socket.bind(("",6000))
+        self.chat_server_socket.listen(1)
 
         self.CONNECTION_LIST.append(self.chat_server_socket)
 
