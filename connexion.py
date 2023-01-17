@@ -31,14 +31,12 @@ class ClientTel:
         res : str = ""
         #Test si c'est le bon format
         test : bool = False
-        print(num)
         cherch = "CHERCHER:"
 
         try:
             if num != '':
                 num = str(num)
                 num = cherch + num
-                print(num)
                 test = True
             else:
                 pass
@@ -58,7 +56,6 @@ class ClientTel:
         res : str = ""
         #Test si c'est le bon format
         test : bool = False
-        print(num_appeler)
 
         try:
             if num_appeler != '':
@@ -70,15 +67,12 @@ class ClientTel:
         except:
             test = False
 
-        print(type(num_appeler))
-        print(num_appeler)
 
         if test == True:
             self.envoyer(f"APL:{num_appeler}")
             res = self.recevoir()
         else:
             res = "non existant"
-        print(res)
         return res
 
 
@@ -91,43 +85,3 @@ class ClientTel:
         tab_bytes: bytes = self.__socket.recv(255)
         msg: str = tab_bytes.decode("utf-8")
         return msg
-
-
-
-class ChatServer:
-    def __init__(self):
-
-        self.CONNECTION_LIST = []
-        self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.chat_server_socket.bind(("",6000))
-        self.chat_server_socket.listen(1)
-
-        self.CONNECTION_LIST.append(self.chat_server_socket)
-
-        print ("Server Started!")
-
-    def broadcast(self, sock, data):
-        for current_socket in self.CONNECTION_LIST:
-            if current_socket != self.chat_server_socket and current_socket != sock:
-                try:
-                    current_socket.send(data)
-                except:
-                    pass
-
-    def run(self):
-        while True:
-            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
-
-            for current_socket in rlist:
-                if current_socket is self.chat_server_socket:
-                    (new_socket, address) = self.chat_server_socket.accept()
-                    self.CONNECTION_LIST.append(new_socket)
-                    print("connected to the server")
-                else:
-                    try:
-                        data = current_socket.recv(1024)
-                        self.broadcast(current_socket, data)
-                    except socket.error:
-                        print("left the server")
-                        current_socket.close()
-                        self.CONNECTION_LIST.remove(current_socket)

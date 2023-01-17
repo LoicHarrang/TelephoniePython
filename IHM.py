@@ -3,8 +3,10 @@ import socket
 import pyaudio
 from threading import Thread
 from connexion import ClientTel
-from connexion import ChatServer
 from telephone import appel1
+import select
+from tkinter import messagebox
+import time
 
 class Fen_Principale(Tk):
 
@@ -40,7 +42,7 @@ class Fen_Principale(Tk):
 
         self.__lbl_apll = Label(self.__fen, text="Tu veux appeler :", width=25)
         self.__ent_apll = Entry(self.__fen,width=5,state=DISABLED)
-        self.__btn_apll = Button(self.__fen,text="Choix", command=self.appeler,state=DISABLED)
+        self.__btn_apll = Button(self.__fen,text="Choix", command = self.appeler, state=DISABLED)
         self.__lbl_appll2 = Label(self.__fen, text="Numéro destinataire 3 chiffres", width=40)
 
 
@@ -138,26 +140,22 @@ class Fen_Principale(Tk):
         self.__Client = ClientTel(self.__ipserveur,self.__portserveur)
         qui_appeler = self.__ent_apll.get()
         ip_destinataire = self.__Client.destinataire(qui_appeler)
-        print(ip_destinataire)
         if ip_destinataire == "non existant":
             self.__lbl_appll2["fg"]="red"
             self.__lbl_appll2["text"]="Vous devez joindre un numéro existant"
             print("Pas existant")
 
         else:
+            Fen_japell(self)
             self.__btn_apll["state"] = DISABLED
             ip_destinataire = ip_destinataire.split(":")
             ip_destinataire = ip_destinataire[1]
             ip_destinataire.replace(" ","")
             print("Pour appeler vous aller communiquer avec l'ip :",ip_destinataire)
             self.__lbl_appll2["fg"]="black"
+            print("ok")
             appel(ip_destinataire)
-
-            """
-            except:
-                self.__btn_apll["state"] = NORMAL
-            """
-
+            self.__btn_apll["state"] = NORMAL
 
 def appel(ip):
     global CHUNK
@@ -167,10 +165,8 @@ def appel(ip):
     RATE = 44100
     ip = ip.split()
     ip = ip[0]
-    print(ip)
 
     global s
-    print(ip)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ip,6000))
 
@@ -214,8 +210,6 @@ def send_data():
         except:
             pass
                 
-
-
 
 class Fen_Config(Toplevel):
 
@@ -261,23 +255,115 @@ class Fen_Config(Toplevel):
         self.__lbl_port.grid(row= 1, column= 0)
         self.__entree_port.grid(row= 1, column= 1)
         self.__btn_retour.grid(row= 2, column=0)
-        print(self.__fp.get_ip_port())
         self.protocol("WM_DELETE_WINDOW", self.configuration)
 
     def configuration(self)-> None:
         adr_port: str = f"ADRESSE DU SERVEUR : {self.__entree_adr.get()} : {self.__entree_port.get()}"
         self.__fp.set_lbl_adr_port (adr_port)
         self.__fp.deiconify() # afficher la fenetre 
-        self.destroy() #detruire la fenetre courante
+        self.destroy() #detruire la fenetre courante²
 
     def get_socket(self)-> float:
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
+class Fen_japell(Toplevel):
+    def __init__(self, fp: Fen_Principale)-> None:
+
+        Toplevel.__init__(self)
+        self.__fp = fp
+        self.__fp.withdraw()
+        self.geometry('300x100')
+
+        self.title("appel")
+        self.__fenapp : Frame
+        self.__lbl_appel : Label
+
+
+        self.__fenapp = Frame(self, borderwidth=3, relief= "groove",padx=1,pady=1)
+        self.__lbl_appel = Label(self.__fenapp, text="Appel en cours")
+        
+
+
+        self.__fenapp.pack()
+        self.__lbl_appel.grid(row=0, column=0)
+    
+
+class Fen_jsuisappel(Toplevel):
+    def __init__(self, fp: Fen_Principale)-> None:
+        Toplevel.__init__(self)
+        self.__fp = fp
+        # déclaration
+        self.title("j apelle")
+        self.__fen : Frame
+        self.__btn_accept: Button
+        self.__btn_refuse : Button
+
+        
+        self.__fen = Frame(self,borderwidth=3, relief= "groove",padx=20,pady=20)
+        self.__lbl_appelarrive = Label(self.__fen,text="Un appel en provenance de ....")
+        self.__btn_accept = Button(self.__fen,text = "Accepter", bg="green", command=self.appelencours)
+        self.__btn_refuse = Button(self.__fen,text="Refuser",bg ="red", command=self.destroy)
+
+        #Affichage dans le tk
+        self.__fen.pack(expand=0)
+        self.__lbl_appelarrive.grid(row=1, column=0)
+        self.__btn_accept.grid(row=2, column=0)
+        self.__btn_refuse.grid(row=2, column=1)
+
+    def appelencours(self):
+        print("Appel ok")
+
+
+class ChatServer:
+    def __init__(self):
+        self.accept_appel : bool = False
+        self.CONNECTION_LIST = []
+        self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.chat_server_socket.bind(("",6000))
+        self.chat_server_socket.listen(1)
+
+        self.CONNECTION_LIST.append(self.chat_server_socket)
+
+        print ("Server Started!")
+
+    def broadcast(self, sock, data):
+        for current_socket in self.CONNECTION_LIST:
+            if current_socket != self.chat_server_socket and current_socket != sock:
+                try:
+                    current_socket.send(data)
+                except:
+                    pass
+
+    def run(self):
+        while True:
+            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
+            #print(len(self.CONNECTION_LIST))
+            for current_socket in rlist:
+                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3:
+                    (new_socket, address) = self.chat_server_socket.accept()
+                    self.CONNECTION_LIST.append(new_socket)
+                    print("connected to the server")
+                    
+                else:
+                    try:
+                        if self.accept_appel != True and len(self.CONNECTION_LIST) > 2:
+                            self.accept_appel == True
+                            Fen_jsuisappel(self)
+                            pass
+
+                        else :
+                            data = current_socket.recv(1024)
+                            self.broadcast(current_socket, data)
+                    except socket.error:
+                        print("left the server")
+                        current_socket.close()
+                        self.CONNECTION_LIST.remove(current_socket)
+
+
 class Affichage(Thread):
     def __init__(self):
         Thread.__init__(self)
-        #ici ça ne marchera pas self.window=GUIInterface()
  
     def run(self):
         #là ça marche
@@ -294,12 +380,6 @@ class Tel(Thread):
     def run(self):
         ChatServer().run()
 
-class Tel(Thread):
-    def __init__(self):
-        Thread.__init__(self)
- 
-    def run(self):
-        ChatServer().run()
 
 class Tel1(Thread):
     def __init__(self):
