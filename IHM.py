@@ -382,7 +382,7 @@ class ChatServer:
 
     def broadcast(self, sock, data):
         for current_socket in self.CONNECTION_LIST:
-            if current_socket != self.chat_server_socket and current_socket != sock:
+            if current_socket != self.chat_server_socket and current_socket != sock and accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == True:
                 try:
                     current_socket.send(data)
                 except:
@@ -391,11 +391,12 @@ class ChatServer:
     def run(self):
         global fermeture_port
         fermeture_port = False
+        global apparaitre
         apparaitre = False
         while True:
             rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
             for current_socket in rlist:
-                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3:
+                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3 :
                     (new_socket, address) = self.chat_server_socket.accept()
                     self.CONNECTION_LIST.append(new_socket)
                     print("connected to the server")
