@@ -326,16 +326,21 @@ def destroy():
 class Fen_appel(Toplevel):
 
     def __init__(self, fp: Fen_Principale)-> None:
-        Toplevel.__init__(self)
-        self.title("Appel en cours")
 
-        self.geometry("650x500")
+        Toplevel.__init__(self)
+        self.__fp = fp
+        self.title("fenetre appel")
+
+        self.geometry("400x300")
         self.resizable(False,False)
         self.backgroundImage=PhotoImage(file="wallpaper.png")
         self.backgroundImageLabel = Label(self,image = self.backgroundImage)
         self.backgroundImageLabel.place(x=0,y=0)
-        self.canva = Canvas(self)
+        self.canva = Canvas(self, width = 300, height = 400)
         self.canva.pack(padx=10,pady=10)
+        self.__btn_raccrocher: Button
+
+        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red", command=self.raccrocher)
 
         def updateTime():
             now = default_timer() - start
@@ -347,13 +352,22 @@ class Fen_appel(Toplevel):
 
         self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
         start = default_timer()
-        text_clock = self.canva.create_text(193,40,justify='center', font = 'Helvetica 16')
+        text_clock = self.canva.create_text(155,40,justify='center', font = 'Helvetica 24')
 
         updateTime()
 
-        self.__fen.pack(expand=1)
+        self.canva.create_window(153,225, window=self.__btn_raccrocher)
 
+    def raccrocher(self):
+        self.destroy()
+        raccroche()
 
+def raccroche():
+    global fermeture_port
+    global accept_appel
+    accept_appel = False
+    fermeture_port = True
+        
 
 class ChatServer:
     def __init__(self):
@@ -392,12 +406,9 @@ class ChatServer:
                             ip = self.CONNECTION_LIST[2]
                             ip = ip.getpeername()
                             ip = ip[0]
-
-                            print(ip)
                             Fen_jsuisappel(self,ip)
-                            time.sleep(10)
-                            if fermeture_port == False and accept_appel == False:
-                                fermeture_port = True
+                            while fermeture_port == False and accept_appel == False:
+                                time.sleep(0.001)
 
                         elif accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == False:
                             Fen_appel(self)
