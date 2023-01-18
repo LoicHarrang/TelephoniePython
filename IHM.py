@@ -7,12 +7,16 @@ from telephone import appel1
 import select
 from tkinter import messagebox
 import time
+from timeit import default_timer
+
+
 
 class Fen_Principale(Tk):
 
     def __init__(self)-> None:
         Tk.__init__(self)
         # déclaration
+
         self.__lbl_adr_port: Label
         self.__adr_port_init: str
         self.__btn_config: Button
@@ -25,9 +29,9 @@ class Fen_Principale(Tk):
 
         self.geometry("650x500")
         self.resizable(False,False)
-        #self.backgroundImage=PhotoImage(file="wallpaper.png")
-        #self.backgroundImageLabel = Label(self,image = self.backgroundImage)
-        #self.backgroundImageLabel.place(x=0,y=0)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
 
         self.__fen = Frame(self, borderwidth=3, relief= "groove",padx=1,pady=1)
         self.__adr_port_init = "ADRESSE DU SERVEUR : xxx.xxx.xxx.xxx : xxx"
@@ -146,14 +150,13 @@ class Fen_Principale(Tk):
             print("Pas existant")
 
         else:
-            Fen_japell(self)
             self.__btn_apll["state"] = DISABLED
             ip_destinataire = ip_destinataire.split(":")
             ip_destinataire = ip_destinataire[1]
             ip_destinataire.replace(" ","")
             print("Pour appeler vous aller communiquer avec l'ip :",ip_destinataire)
             self.__lbl_appll2["fg"]="black"
-            print("ok")
+            self.__lbl_appll2["text"] ="Appel en cours"
             appel(ip_destinataire)
             self.__btn_apll["state"] = NORMAL
 
@@ -234,9 +237,9 @@ class Fen_Config(Toplevel):
 
         self.geometry("650x500")
         self.resizable(False,False)
-        #self.backgroundImage=PhotoImage(file="wallpaper.png")
-        #self.backgroundImageLabel = Label(self,image = self.backgroundImage)
-        #self.backgroundImageLabel.place(x=0,y=0)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
 
         self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
         self.__lbl_adr = Label(self.__fen, text= "ADRESSE SERVEUR")
@@ -261,49 +264,31 @@ class Fen_Config(Toplevel):
         adr_port: str = f"ADRESSE DU SERVEUR : {self.__entree_adr.get()} : {self.__entree_port.get()}"
         self.__fp.set_lbl_adr_port (adr_port)
         self.__fp.deiconify() # afficher la fenetre 
-        self.destroy() #detruire la fenetre courante²
+        self.destroy() #detruire la fenetre courante
 
     def get_socket(self)-> float:
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
-class Fen_japell(Toplevel):
-    def __init__(self, fp: Fen_Principale)-> None:
-
-        Toplevel.__init__(self)
-        self.__fp = fp
-        self.__fp.withdraw()
-        self.geometry('300x100')
-
-        self.title("appel")
-        self.__fenapp : Frame
-        self.__lbl_appel : Label
 
 
-        self.__fenapp = Frame(self, borderwidth=3, relief= "groove",padx=1,pady=1)
-        self.__lbl_appel = Label(self.__fenapp, text="Appel en cours")
-        
-
-
-        self.__fenapp.pack()
-        self.__lbl_appel.grid(row=0, column=0)
-    
 
 class Fen_jsuisappel(Toplevel):
-    def __init__(self, fp: Fen_Principale)-> None:
+    def __init__(self, fp: Fen_Principale,num)-> None:
         Toplevel.__init__(self)
+
         self.__fp = fp
         # déclaration
         self.title("j apelle")
+
         self.__fen : Frame
         self.__btn_accept: Button
         self.__btn_refuse : Button
-
         
         self.__fen = Frame(self,borderwidth=3, relief= "groove",padx=20,pady=20)
-        self.__lbl_appelarrive = Label(self.__fen,text="Un appel en provenance de ....")
-        self.__btn_accept = Button(self.__fen,text = "Accepter", bg="green", command=self.appelencours)
-        self.__btn_refuse = Button(self.__fen,text="Refuser",bg ="red", command=self.destroy)
+        self.__lbl_appelarrive = Label(self.__fen,text=f"Un appel en provenance de : {num} ")
+        self.__btn_accept = Button(self.__fen,text = "Accepter", bg="green", command=self.appel)
+        self.__btn_refuse = Button(self.__fen,text="Refuser",bg ="red", command=self.detruire)
 
         #Affichage dans le tk
         self.__fen.pack(expand=0)
@@ -311,13 +296,67 @@ class Fen_jsuisappel(Toplevel):
         self.__btn_accept.grid(row=2, column=0)
         self.__btn_refuse.grid(row=2, column=1)
 
-    def appelencours(self):
-        print("Appel ok")
+
+    def appel(self):
+        appelencours()
+        self.destroy()
+
+
+    def detruire(self):
+        destroy()
+        self.destroy()
+
+
+accept_appel = False
+def appelencours():
+    print("Appel ok")
+    global accept_appel 
+    accept_appel = True
+    print(accept_appel)
+
+
+def destroy():
+    print("Appel pas ok")
+    global accept_appel 
+    global fermeture_port
+    accept_appel = False
+    fermeture_port = True
+
+
+class Fen_appel(Toplevel):
+
+    def __init__(self, fp: Fen_Principale)-> None:
+        Toplevel.__init__(self)
+        self.title("Appel en cours")
+
+        self.geometry("650x500")
+        self.resizable(False,False)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
+        self.canva = Canvas(self)
+        self.canva.pack(padx=10,pady=10)
+
+        def updateTime():
+            now = default_timer() - start
+            minutes, seconds = divmod(now, 60)
+            hours, minutes = divmod(minutes, 60)
+            str_time = "%d:%02d:%02d" % (hours, minutes, seconds)
+            self.canva.itemconfigure(text_clock, text=str_time)
+            self.after(1000, updateTime)
+
+        self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
+        start = default_timer()
+        text_clock = self.canva.create_text(193,40,justify='center', font = 'Helvetica 16')
+
+        updateTime()
+
+        self.__fen.pack(expand=1)
+
 
 
 class ChatServer:
     def __init__(self):
-        self.accept_appel : bool = False
         self.CONNECTION_LIST = []
         self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.chat_server_socket.bind(("",6000))
@@ -336,9 +375,11 @@ class ChatServer:
                     pass
 
     def run(self):
+        global fermeture_port
+        fermeture_port = False
+        apparaitre = False
         while True:
             rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
-            #print(len(self.CONNECTION_LIST))
             for current_socket in rlist:
                 if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3:
                     (new_socket, address) = self.chat_server_socket.accept()
@@ -347,18 +388,41 @@ class ChatServer:
                     
                 else:
                     try:
-                        if self.accept_appel != True and len(self.CONNECTION_LIST) > 2:
-                            self.accept_appel == True
-                            Fen_jsuisappel(self)
-                            pass
+                        if accept_appel != True and len(self.CONNECTION_LIST) > 2:
+                            ip = self.CONNECTION_LIST[2]
+                            ip = ip.getpeername()
+                            ip = ip[0]
 
-                        else :
+                            print(ip)
+                            Fen_jsuisappel(self,ip)
+                            time.sleep(10)
+                            if fermeture_port == False and accept_appel == False:
+                                fermeture_port = True
+
+                        elif accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == False:
+                            Fen_appel(self)
+                            apparaitre = True
+
+
+                        elif accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == True:
                             data = current_socket.recv(1024)
                             self.broadcast(current_socket, data)
+
+                        else:
+                            pass
+
                     except socket.error:
                         print("left the server")
                         current_socket.close()
                         self.CONNECTION_LIST.remove(current_socket)
+
+            if fermeture_port == True:
+                self.chat_server_socket.close()
+                fermeture_port = False
+            else:
+                pass
+
+        
 
 
 class Affichage(Thread):
@@ -366,7 +430,6 @@ class Affichage(Thread):
         Thread.__init__(self)
  
     def run(self):
-        #là ça marche
         self.window=Fen_Principale()
         self.window.mainloop()
  
@@ -390,6 +453,7 @@ class Tel1(Thread):
 
 
 if __name__ == "__main__":
+
     try:
         affichage=Affichage()
         affichage.start()
