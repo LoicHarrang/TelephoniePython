@@ -175,8 +175,6 @@ def appel(ip):
 
 
 
-
-
     thread_ecoute = Thread(target=receive_data)
     thread_enregistrer = Thread(target=send_data)
     p = pyaudio.PyAudio()
@@ -204,13 +202,14 @@ def receive_data():
         try:
             data = s.recv(1024)
             print(data)
-            if data[0:24] != b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':
+            if data != "":
                 global connects
-                connects = False
-                
-            else :
                 connects = True
                 receive_stream.write(data)
+                print(connects)
+                
+            else :
+                pass
 
         except:
             pass
@@ -383,66 +382,52 @@ class ChatServer:
     def __init__(self):
         self.CONNECTION_LIST = []
         self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.chat_server_socket.bind(("",6000))
-        self.chat_server_socket.listen(1)
-
-        self.CONNECTION_LIST.append(self.chat_server_socket)
-
-        print ("Server Started!")
-
-    def broadcast(self, sock, data):
-        for current_socket in self.CONNECTION_LIST:
-            if current_socket != self.chat_server_socket and current_socket != sock and accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == True:
-                try:
-                    current_socket.send(data)
-                except:
-                    pass
+        serv_adress = ('127.0.0.1',6000)
+        self.chat_server_socket.bind(serv_adress)
+        print("ecoute commence")
 
     def run(self):
         global fermeture_port
         fermeture_port = False
         global apparaitre
         apparaitre = False
+        p = pyaudio.PyAudio()
+        stream = p.open(format=pyaudio.paInt16,
+                channels=1,
+                rate=44100,
+                input=True,
+                frames_per_buffer=1024)
+
         while True:
-            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
-            for current_socket in rlist:
-                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3 :
-                    (new_socket, address) = self.chat_server_socket.accept()
-                    self.CONNECTION_LIST.append(new_socket)
-                    print("connected to the server")
-                    
+            try:
+                if accept_appel == True and apparaitre == False:
+                    apparaitre = True
+                    Fen_appel(self)
+
+
+                elif accept_appel == True and apparaitre == True:
+                    recevoir, addresse = self.chat_server_socket.recvfrom(1024)
+                    stream.write(recevoir)
+                    envoie = stream.read(1024)
+                    self.chat_server_socket.sendto(envoie,addresse)
+
+
                 else:
-                    try:
-                        if accept_appel != True and len(self.CONNECTION_LIST) > 2:
-                            ip = self.CONNECTION_LIST[2]
-                            ip = ip.getpeername()
-                            ip = ip[0]
-                            Fen_jsuisappel(self,ip)
-                            while fermeture_port == False and accept_appel == False:
-                                time.sleep(0.001)
+                    pass
 
-                        elif accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == False:
-                            apparaitre = True
-                            Fen_appel(self)
-
-
-                        elif accept_appel == True and len(self.CONNECTION_LIST) > 2 and apparaitre == True:
-                            data = current_socket.recv(1024)
-                            self.broadcast(current_socket, data)
-
-                        else:
-                            pass
-
-                    except socket.error:
-                        print("left the server")
-                        current_socket.close()
-                        self.CONNECTION_LIST.remove(current_socket)
+            except socket.error:
+                print("left the server")
+                self.chat_server_socket.close()
+                self.CONNECTION_LIST.remove(self.chat_server_socket)
 
             if fermeture_port == True:
                 self.chat_server_socket.close()
                 fermeture_port = False
             else:
                 pass
+
+            self.chat_server_socket.close()
+            p.terminate()
 
         
 
@@ -465,13 +450,14 @@ class Tel(Thread):
     def run(self):
         ChatServer().run()
 
-
+"""
 class Tel1(Thread):
     def __init__(self):
         Thread.__init__(self)
  
     def run(self):
         appel1()
+"""
 
 
 if __name__ == "__main__":
@@ -481,10 +467,33 @@ if __name__ == "__main__":
         affichage.start()
         ecoutetel = Tel()
         ecoutetel.start()
+        """
         try:
             tel = Tel1()
             tel.start()
         except:
             pass
+        """
     except:
         print("erreur dans le programme")
+
+
+"""
+            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
+            for current_socket in rlist:
+                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3 :
+                    (new_socket, address) = self.chat_server_socket.accept()
+                    self.CONNECTION_LIST.append(new_socket)
+                    print("connected to the server")
+                    
+                else:
+
+                    if accept_appel != True and len(self.CONNECTION_LIST) > 2:
+                    ip = self.CONNECTION_LIST[2]
+                    ip = ip.getpeername()
+                    ip = ip[0]
+                    Fen_jsuisappel(self,ip)
+                    while fermeture_port == False and accept_appel == False:
+                        time.sleep(0.001)
+
+            """
