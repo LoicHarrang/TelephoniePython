@@ -3,7 +3,6 @@ import socket
 import pyaudio
 from threading import Thread
 from connexion import ClientTel
-from telephone import appel1
 import select
 from tkinter import messagebox
 import time
@@ -318,7 +317,7 @@ def raccroche():
     fermeture_port = True
 
 
-def Clientaudio_UDP(ip):
+def appel(ip):
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 2
@@ -358,9 +357,11 @@ def Clientaudio_UDP(ip):
     Tr.join()
     Ts.join()
                 
+global affichage
+affichage : int = 0
 
 def Servaudio_UDP():
-    affichage : bool = False
+
 
     FORMAT = pyaudio.paInt16
     CHUNK = 1024
@@ -379,22 +380,29 @@ def Servaudio_UDP():
     frames = []
 
     def udpStream(CHUNK):
-
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         udp.bind(("", 6000))
 
         while True:
-            if soundData != '':
-                global affichage
-                affichage = True
-                soundData, addr = udp.recvfrom(CHUNK * CHANNELS * 2)
+            soundData, addr = udp.recvfrom(CHUNK * CHANNELS * 2)
+
+            if affichage == 1: 
+                Fen_appel()
+                affichage = 3
+
+            
+
+            if soundData != '' or affichage == 3:
+                affichage = 1
                 frames.append(soundData)
+
+
         udp.close()
 
     def play(stream, CHUNK):
         BUFFER = 10
         while True:
-                if len(frames) == BUFFER and affichage == True:
+                if len(frames) == BUFFER and affichage == 3:
                     while True:
                         stream.write(frames.pop(0), CHUNK)
 
