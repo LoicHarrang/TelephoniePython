@@ -10,7 +10,7 @@ import time
 from timeit import default_timer
 
 
-
+#Fenetre Principale
 class Fen_Principale(Tk):
 
     def __init__(self)-> None:
@@ -160,69 +160,8 @@ class Fen_Principale(Tk):
             appel(ip_destinataire)
             self.__btn_apll["state"] = NORMAL
 
-def appel(ip):
-    global CHUNK
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 44100
-    ip = ip.split()
-    ip = ip[0]
 
-    global s
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ip,6000))
-
-
-
-    thread_ecoute = Thread(target=receive_data)
-    thread_enregistrer = Thread(target=send_data)
-    p = pyaudio.PyAudio()
-    connexion = True
-    print("Le chat vocal va commencer")
-    global receive_stream
-    global send_stream
-    
-    receive_stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
-    send_stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
-
-    if connexion == True:
-        thread_ecoute.start()
-    
-    elif connexion == True and connects == True:
-        thread_ecoute.start()
-        thread_enregistrer.start()
-        thread_ecoute.join()
-        thread_enregistrer.join()
-
-    
-connects : bool = False
-def receive_data():
-    while True:
-        try:
-            data = s.recv(1024)
-            print(data)
-            if data != "":
-                global connects
-                connects = True
-                receive_stream.write(data)
-                print(connects)
-                
-            else :
-                pass
-
-        except:
-            pass
-
-def send_data():
-    while True:
-        try:
-            data = send_stream.read(CHUNK)
-            s.sendall(data)
-        except:
-            pass
-                
-
+#Fenetre Config
 class Fen_Config(Toplevel):
 
     def __init__(self, fp: Fen_Principale)-> None:
@@ -281,7 +220,7 @@ class Fen_Config(Toplevel):
 
 
 
-
+#Fenetre quand on est appelé
 class Fen_jsuisappel(Toplevel):
     def __init__(self, fp: Fen_Principale,num)-> None:
         Toplevel.__init__(self)
@@ -332,6 +271,7 @@ def destroy():
     fermeture_port = True
 
 
+#Fenetre pendant l'appel
 class Fen_appel(Toplevel):
 
     def __init__(self, fp: Fen_Principale)-> None:
@@ -376,60 +316,96 @@ def raccroche():
     global accept_appel
     accept_appel = False
     fermeture_port = True
-        
 
-class ChatServer:
-    def __init__(self):
-        self.CONNECTION_LIST = []
-        self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serv_adress = ('127.0.0.1',6000)
-        self.chat_server_socket.bind(serv_adress)
-        print("ecoute commence")
 
-    def run(self):
-        global fermeture_port
-        fermeture_port = False
-        global apparaitre
-        apparaitre = False
-        p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16,
-                channels=1,
-                rate=44100,
-                input=True,
-                frames_per_buffer=1024)
+def Clientaudio_UDP(ip):
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 2
+    RATE = 44100
+    IP = ip
+
+    p = pyaudio.PyAudio()
+    stream = p.open(format = FORMAT,
+                            channels = CHANNELS,
+                            rate = RATE,
+                            input = True,
+                            frames_per_buffer = CHUNK,
+                            )
+
+    frames = []
+
+    def udpStream():
+        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    
 
         while True:
-            try:
-                if accept_appel == True and apparaitre == False:
-                    apparaitre = True
-                    Fen_appel(self)
+            if len(frames) > 0:
+                udp.sendto(frames.pop(0), (IP, 6000))
+
+        udp.close()
+
+    def record(stream, CHUNK):    
+        while True:
+            frames.append(stream.read(CHUNK))
 
 
-                elif accept_appel == True and apparaitre == True:
-                    recevoir, addresse = self.chat_server_socket.recvfrom(1024)
-                    stream.write(recevoir)
-                    envoie = stream.read(1024)
-                    self.chat_server_socket.sendto(envoie,addresse)
+    Tr = Thread(target = record, args = (stream, CHUNK,))
+    Ts = Thread(target = udpStream)
+    Tr.setDaemon(True)
+    Ts.setDaemon(True)
+    Tr.start()
+    Ts.start()
+    Tr.join()
+    Ts.join()
+                
 
+def Servaudio_UDP():
+    affichage : bool = False
 
-                else:
-                    pass
+    FORMAT = pyaudio.paInt16
+    CHUNK = 1024
+    CHANNELS = 2
+    RATE = 44100
 
-            except socket.error:
-                print("left the server")
-                self.chat_server_socket.close()
-                self.CONNECTION_LIST.remove(self.chat_server_socket)
+    p = pyaudio.PyAudio()
 
-            if fermeture_port == True:
-                self.chat_server_socket.close()
-                fermeture_port = False
-            else:
-                pass
+    stream = p.open(format=FORMAT,
+                    channels = CHANNELS,
+                    rate = RATE,
+                    output = True,
+                    frames_per_buffer = CHUNK,
+                    )
 
-            self.chat_server_socket.close()
-            p.terminate()
+    frames = []
 
-        
+    def udpStream(CHUNK):
+
+        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp.bind(("", 6000))
+
+        while True:
+            if soundData != '':
+                global affichage
+                affichage = True
+                soundData, addr = udp.recvfrom(CHUNK * CHANNELS * 2)
+                frames.append(soundData)
+        udp.close()
+
+    def play(stream, CHUNK):
+        BUFFER = 10
+        while True:
+                if len(frames) == BUFFER and affichage == True:
+                    while True:
+                        stream.write(frames.pop(0), CHUNK)
+
+    Ts = Thread(target = udpStream, args=(CHUNK,))
+    Tp = Thread(target = play, args=(stream, CHUNK,))
+    Ts.setDaemon(True)
+    Tp.setDaemon(True)
+    Ts.start()
+    Tp.start()
+    Ts.join()
+    Tp.join()
 
 
 class Affichage(Thread):
@@ -448,16 +424,8 @@ class Tel(Thread):
         Thread.__init__(self)
  
     def run(self):
-        ChatServer().run()
+        Servaudio_UDP()
 
-"""
-class Tel1(Thread):
-    def __init__(self):
-        Thread.__init__(self)
- 
-    def run(self):
-        appel1()
-"""
 
 
 if __name__ == "__main__":
@@ -467,33 +435,5 @@ if __name__ == "__main__":
         affichage.start()
         ecoutetel = Tel()
         ecoutetel.start()
-        """
-        try:
-            tel = Tel1()
-            tel.start()
-        except:
-            pass
-        """
     except:
         print("erreur dans le programme")
-
-
-"""
-            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
-            for current_socket in rlist:
-                if current_socket is self.chat_server_socket and len(self.CONNECTION_LIST) < 3 :
-                    (new_socket, address) = self.chat_server_socket.accept()
-                    self.CONNECTION_LIST.append(new_socket)
-                    print("connected to the server")
-                    
-                else:
-
-                    if accept_appel != True and len(self.CONNECTION_LIST) > 2:
-                    ip = self.CONNECTION_LIST[2]
-                    ip = ip.getpeername()
-                    ip = ip[0]
-                    Fen_jsuisappel(self,ip)
-                    while fermeture_port == False and accept_appel == False:
-                        time.sleep(0.001)
-
-            """
