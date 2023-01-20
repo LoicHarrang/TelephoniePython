@@ -159,6 +159,50 @@ class Fen_Principale(Tk):
             appel(ip_destinataire)
             self.__btn_apll["state"] = NORMAL
 
+def appel(ip):
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 2
+    RATE = 44100
+    IpPort = (ip,5000)
+
+    p = pyaudio.PyAudio()
+    stream = p.open(format = FORMAT,
+                            channels = CHANNELS,
+                            rate = RATE,
+                            input = True,
+                            frames_per_buffer = CHUNK,
+                            )
+
+    frames = []
+
+    def udpStream():
+        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    
+
+        while True:
+            if len(frames) > 0:
+                udp.sendto(frames.pop(0), ("192.168.1.35",6000))
+
+        udp.close()
+
+    def record(stream, CHUNK):    
+        while True:
+            frames.append(stream.read(CHUNK))
+
+
+    Tr = Thread(target = record, args = (stream, CHUNK,))
+    Ts = Thread(target = udpStream)
+    Tr.setDaemon(True)
+    Ts.setDaemon(True)
+    Tr.start()
+    Ts.start()
+    Tr.join()
+    Ts.join()
+
+
+
+
+
 
 #Fenetre Config
 class Fen_Config(Toplevel):
@@ -315,54 +359,12 @@ def raccroche():
     global accept_appel
     accept_appel = False
     fermeture_port = True
-
-
-def appel(ip):
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 2
-    RATE = 44100
-    IP = ip
-
-    p = pyaudio.PyAudio()
-    stream = p.open(format = FORMAT,
-                            channels = CHANNELS,
-                            rate = RATE,
-                            input = True,
-                            frames_per_buffer = CHUNK,
-                            )
-
-    frames = []
-
-    def udpStream():
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    
-
-        while True:
-            if len(frames) > 0:
-                udp.sendto(frames.pop(0), (IP, 6000))
-
-        udp.close()
-
-    def record(stream, CHUNK):    
-        while True:
-            frames.append(stream.read(CHUNK))
-
-
-    Tr = Thread(target = record, args = (stream, CHUNK,))
-    Ts = Thread(target = udpStream)
-    Tr.setDaemon(True)
-    Ts.setDaemon(True)
-    Tr.start()
-    Ts.start()
-    Tr.join()
-    Ts.join()
                 
 global affichage
 affichage : int = 0
 
+
 def Servaudio_UDP():
-
-
     FORMAT = pyaudio.paInt16
     CHUNK = 1024
     CHANNELS = 2
