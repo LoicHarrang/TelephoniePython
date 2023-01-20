@@ -207,6 +207,7 @@ def receive_data():
             if data[0:24] != b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':
                 global connects
                 connects = False
+                
             else :
                 connects = True
                 receive_stream.write(data)
