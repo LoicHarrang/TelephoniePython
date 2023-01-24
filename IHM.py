@@ -164,7 +164,8 @@ def appel(ip):
     FORMAT = pyaudio.paInt16
     CHANNELS = 2
     RATE = 44100
-    IpPort = (ip,5000)
+    IpPort : socket= (ip,5000)
+    IP = ip
 
     p = pyaudio.PyAudio()
     stream = p.open(format = FORMAT,
@@ -181,7 +182,7 @@ def appel(ip):
 
         while True:
             if len(frames) > 0:
-                udp.sendto(frames.pop(0), ("192.168.1.35",6000))
+                udp.sendto(frames.pop(0), (IP,6000))
 
         udp.close()
 
@@ -365,6 +366,7 @@ affichage : int = 0
 
 
 def Servaudio_UDP():
+    print("en ecoute")
     FORMAT = pyaudio.paInt16
     CHUNK = 1024
     CHANNELS = 2
@@ -381,41 +383,18 @@ def Servaudio_UDP():
 
     frames = []
 
-    def udpStream(CHUNK):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.bind(("", 6000))
+    udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp.bind(("",6000))
 
-        while True:
-            soundData, addr = udp.recvfrom(CHUNK * CHANNELS * 2)
-
-            if affichage == 1: 
-                Fen_appel()
-                affichage = 3
-
+    while True:
+        msg,client_addr = udp.recvfrom(2000)
+        print('GOT connection from ',client_addr,msg)
             
-
-            if soundData != '' or affichage == 3:
-                affichage = 1
-                frames.append(soundData)
-
-
-        udp.close()
-
-    def play(stream, CHUNK):
-        BUFFER = 10
         while True:
-                if len(frames) == BUFFER and affichage == 3:
-                    while True:
-                        stream.write(frames.pop(0), CHUNK)
+            stream.write(msg)
+            envoie = stream.read(1024)
+            udp.sendto(envoie,(client_addr,6000))
 
-    Ts = Thread(target = udpStream, args=(CHUNK,))
-    Tp = Thread(target = play, args=(stream, CHUNK,))
-    Ts.setDaemon(True)
-    Tp.setDaemon(True)
-    Ts.start()
-    Tp.start()
-    Ts.join()
-    Tp.join()
 
 
 class Affichage(Thread):

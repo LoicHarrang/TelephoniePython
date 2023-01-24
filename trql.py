@@ -15,17 +15,20 @@ def test():
                 rate=44100,
                 input=True,
                 frames_per_buffer=1024)
-        server_socket.bind(("127.0.0.1",6000))
+        server_socket.bind(("",6000))
+        print(p.get_default_input_device_info())
 
         envoie = None 
 
         while True:
                 msg,client_addr = server_socket.recvfrom(1024)
-                print('GOT connection from ',client_addr,msg)
+                print('GOT connection from ',client_addr)
                 
                 while True:
-                        stream.write(msg)
                         envoie = stream.read(1024)
-                        server_socket.sendto(envoie,client_addr,6000)
+                        server_socket.sendto(envoie,client_addr)
+                        client_addr = server_socket.recvfrom(1024)
+                        stream.write()
+
                 
 test()
