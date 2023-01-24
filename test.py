@@ -22,7 +22,7 @@ def test(ip):
         clientsocket : socket = (ip,6000)
 
         while True:
-                envoie = stream.read(10)
+                envoie = stream.read(1024)
                 chat_server_socket.sendto(envoie,(clientsocket))
                 
                 

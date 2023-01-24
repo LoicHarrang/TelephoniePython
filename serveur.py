@@ -183,5 +183,14 @@ if __name__ == "__main__":
         port_ecoute  = int(sys.argv[1])
     else:
         port_ecoute = 5000
+
+#Vider la bdd
+    """
+    conn = sqlite3.connect('bdd_client.sqlite')
+    cur = conn.cursor()
+    cur.execute("DELETE FROM 'Utilisateurs'")
+    conn.commit()
+    """
+
     serveurtel = ServeurTel(port_ecoute)
     serveurtel.attenteClient()

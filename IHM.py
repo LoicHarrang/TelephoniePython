@@ -128,7 +128,7 @@ class Fen_Principale(Tk):
                 else:
                     existant : str = "Votre IP est déja associé au numéro : "
                     num = tel[-3:]
-                    self.__lbl_erreur["fg"]="red"
+                    self.__lbl_erreur["fg"]="green"
                     existant = existant + num
                     self.__lbl_erreur.config(text=existant)
                     self.__btn_tel["state"] = DISABLED 
@@ -160,46 +160,43 @@ class Fen_Principale(Tk):
             self.__btn_apll["state"] = NORMAL
 
 def appel(ip):
-    CHUNK = 1024
+    print(ip)
+    chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print("ecoute commence")
+    fermeture_port = False
+    global apparaitre
+    apparaitre = False
     FORMAT = pyaudio.paInt16
-    CHANNELS = 2
+    CHANNELS = 1
     RATE = 44100
-    IpPort : socket= (ip,5000)
-    IP = ip
-
-    p = pyaudio.PyAudio()
-    stream = p.open(format = FORMAT,
-                            channels = CHANNELS,
-                            rate = RATE,
-                            input = True,
-                            frames_per_buffer = CHUNK,
-                            )
-
+    CHUNK = 1024
+    RECORD_SECONDS = 3
+    
+    audio = pyaudio.PyAudio()
     frames = []
 
-    def udpStream():
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    
+  
+# Debut enregistrement
+    stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    print ("Enregistrement en cours...")
 
-        while True:
-            if len(frames) > 0:
-                udp.sendto(frames.pop(0), (IP,6000))
+    print(ip)
+    clientsocket : socket = ("127.0.0.1",6000)
+    while True:
+        for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+            data = stream.read(CHUNK)
+            frames.append(data)  
+        chat_server_socket.sendto(data,clientsocket)
 
-        udp.close()
+        try:
+            frames,client_addr = chat_server_socket.recvfrom(1024)
+            print('GOT connection from ',client_addr)
+            stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True)
+            for data in frames:
+                stream.write(data)
 
-    def record(stream, CHUNK):    
-        while True:
-            frames.append(stream.read(CHUNK))
-
-
-    Tr = Thread(target = record, args = (stream, CHUNK,))
-    Ts = Thread(target = udpStream)
-    Tr.setDaemon(True)
-    Ts.setDaemon(True)
-    Tr.start()
-    Ts.start()
-    Tr.join()
-    Ts.join()
-
+        except:
+            pass
 
 
 
@@ -388,12 +385,14 @@ def Servaudio_UDP():
 
     while True:
         msg,client_addr = udp.recvfrom(2000)
-        print('GOT connection from ',client_addr,msg)
+        print('GOT connection from ',client_addr)
             
         while True:
             stream.write(msg)
+            print("1")
             envoie = stream.read(1024)
             udp.sendto(envoie,(client_addr,6000))
+
 
 
 
