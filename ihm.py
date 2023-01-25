@@ -153,6 +153,7 @@ class Fen_Principale(Tk):
             ip_destinataire.replace(" ","")
             print("Pour appeler vous aller communiquer avec l'ip :",ip_destinataire)
             self.__lbl_appll2["fg"]="black"
+            Fen_appel(self)
             appel(ip_destinataire)
             self.__btn_apll["state"] = NORMAL
 
@@ -270,6 +271,49 @@ class Fen_Config(Toplevel):
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
+
+class Fen_appel(Toplevel):
+    def __init__(self, fp: Fen_Principale)-> None:
+
+        Toplevel.__init__(self)
+        self.__fp = fp
+        self.title("fenetre appel")
+
+        self.geometry("400x300")
+        self.resizable(False,False)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
+        self.canva = Canvas(self, width = 300, height = 400)
+        self.canva.pack(padx=10,pady=10)
+        self.__btn_raccrocher: Button
+
+        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red", command=self.raccrocher)
+
+        def updateTime():
+            now = default_timer() - start
+            minutes, seconds = divmod(now, 60)
+            hours, minutes = divmod(minutes, 60)
+            str_time = "%d:%02d:%02d" % (hours, minutes, seconds)
+            self.canva.itemconfigure(text_clock, text=str_time)
+            self.after(1000, updateTime)
+
+        self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
+        start = default_timer()
+        text_clock = self.canva.create_text(155,40,justify='center', font = 'Helvetica 24')
+        updateTime()
+        self.canva.create_window(153,225, window=self.__btn_raccrocher)
+
+    def raccrocher(self):
+        self.destroy()
+        raccroche()
+
+def raccroche():
+    global fermeture_port
+    global accept_appel
+    accept_appel = False
+    fermeture_port = True
+                
 
 
 class ChatServer:
