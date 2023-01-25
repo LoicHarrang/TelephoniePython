@@ -7,6 +7,8 @@ from telephone import appel1
 import time
 from timeit import default_timer
 import select
+import ctypes
+
 
 class Fen_Principale(Tk):
 
@@ -154,8 +156,10 @@ class Fen_Principale(Tk):
             ip_destinataire.replace(" ","")
             print("Pour appeler vous aller communiquer avec l'ip :",ip_destinataire)
             self.__lbl_appll2["fg"]="black"
-            Fen_appel(self)
-            appel(ip_destinataire)
+
+            Thread(target=Fen_appel, args=(self,)).start()
+
+            Thread(target=appel,args=(ip_destinataire,)).start()
             self.__btn_apll["state"] = NORMAL
 
 
@@ -167,7 +171,6 @@ def appel(ip):
     RATE = 44100
     ip = ip.split()
     ip = ip[0]
-    print(ip)
 
     global s
     print(ip)
@@ -213,6 +216,7 @@ def send_data():
             s.sendall(data)
         except:
             pass
+        
                 
 
 class Fen_Config(Toplevel):
@@ -238,9 +242,9 @@ class Fen_Config(Toplevel):
 
         self.geometry("650x500")
         self.resizable(False,False)
-        #self.backgroundImage=PhotoImage(file="wallpaper.png")
-        #self.backgroundImageLabel = Label(self,image = self.backgroundImage)
-        #self.backgroundImageLabel.place(x=0,y=0)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
 
         self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
         self.__lbl_adr = Label(self.__fen, text= "ADRESSE SERVEUR")
@@ -272,12 +276,14 @@ class Fen_Config(Toplevel):
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
-
 class Fen_appel(Toplevel):
-    def __init__(self, fp: Fen_Principale)-> None:
+
+    def __init__(self,fp = Fen_Principale)-> None:
 
         Toplevel.__init__(self)
+        
         self.__fp = fp
+        self.__fp.withdraw()
         self.title("fenetre appel")
 
         self.geometry("400x300")
@@ -289,7 +295,7 @@ class Fen_appel(Toplevel):
         self.canva.pack(padx=10,pady=10)
         self.__btn_raccrocher: Button
 
-        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red", command=self.raccrocher)
+        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red",command=self.raccrocher)
 
         def updateTime():
             now = default_timer() - start
@@ -302,19 +308,21 @@ class Fen_appel(Toplevel):
         self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
         start = default_timer()
         text_clock = self.canva.create_text(155,40,justify='center', font = 'Helvetica 24')
+
         updateTime()
+
         self.canva.create_window(153,225, window=self.__btn_raccrocher)
 
     def raccrocher(self):
-        self.destroy()
+        self.__fp.deiconify() # afficher la fenetre 
+        self.destroy() #detruire la fenetre courante
         raccroche()
 
+
 def raccroche():
-    global fermeture_port
-    global accept_appel
-    accept_appel = False
-    fermeture_port = True
-                
+    print("Fin de l'appel")
+    s.close()
+               
 
 
 class ChatServer:
@@ -338,6 +346,7 @@ class ChatServer:
                     pass
 
     def run(self):
+        affiche : int = 0
         while True:
             rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
 
@@ -355,13 +364,21 @@ class ChatServer:
                         current_socket.close()
                         self.CONNECTION_LIST.remove(current_socket)
 
+            if len(self.CONNECTION_LIST) > 2 and affiche == 0:
+                affiche = 1
+                Thread(target=affichage_apl).start()
+
+
+
+def affichage_apl():
+    ctypes.windll.user32.MessageBoxW(0, "Un appel est en cours", "Fenetre d'appel", 0)
+
 
 class Affichage(Thread):
     def __init__(self):
         Thread.__init__(self)
  
     def run(self):
-        #là ça marche
         self.window=Fen_Principale()
         self.window.mainloop()
  
@@ -374,6 +391,8 @@ class Tel(Thread):
  
     def run(self):
         ChatServer().run()
+
+
 
 class Tel1(Thread):
     def __init__(self):
