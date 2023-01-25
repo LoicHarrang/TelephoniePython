@@ -45,17 +45,15 @@ def appel1():
 
 
 def receive_data():  # Fonction receive_data() qui permet de récuperer et lire des données
-    data = None
+    data = 1
     affichage = 1
     while True:
         try:
             data = s.recv(1024)  # Récupère les données qui transite via le réseau TCP
             receive_stream.write(data)  # Retransmet les données récupéré au dessus dans les haut parleurs de l'ordinateur
-            """
-            if data != None and affichage == 1:
+            if data != 1 and affichage == 1:
                 Fen__appel()
                 affichage = 2
-            """
         except:
             pass
 
