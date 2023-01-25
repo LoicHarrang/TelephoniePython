@@ -34,14 +34,14 @@ class ClientTel:
     def enregistrement(self, num: int): # Fonction qui test le numéro passé en paramètre et si ok, envoie le numéro au serveur central
         res: str = ""
         test: bool = False
-        print(num)
+        #print(num)
         cherch = "CHERCHER:"
         # Test du format du numéro de téléphone (RAPPEL : 3 chiffres)
         try:
             if num != '':
                 num = str(num)
                 num = cherch + num # Concaténation du mot-clé CHERCHER: + le numéro
-                print(num)
+                #print(num)
                 test = True
             else:
                 pass
@@ -49,7 +49,6 @@ class ClientTel:
         except:
             test = False
 
-        print(type(num))
         if test == True:
             self.envoyer(num) # Appel de la fonction envoyer (avec le numéro destinataire)
             res = self.recevoir() # Appel de la fonction recevoir
@@ -60,7 +59,6 @@ class ClientTel:
     def destinataire(self, num_appeler): # Fonction qui test le numéro passé en paramètre et si ok, envoie une confirmation au serveur central
         res: str = ""
         test: bool = False
-        print(num_appeler)
         # Test du format du numéro de téléphone (RAPPEL : 3 chiffres)
         try:
             if num_appeler != '':
@@ -72,15 +70,12 @@ class ClientTel:
         except:
             test = False
 
-        print(type(num_appeler))
-        print(num_appeler)
 
         if test == True:
             self.envoyer(f"APL:{num_appeler}") # Envoie du mot clé APL: + numéro à appeler
             res = self.recevoir() # Appel de la fonction recevoir
         else:
             res = "non existant"
-        print(res)
         return res
 
     def envoyer(self, msg: str) -> None: # Fonction d'envoie d'un numéro au serveur central

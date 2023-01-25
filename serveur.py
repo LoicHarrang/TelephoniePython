@@ -4,6 +4,50 @@ from socketserver import ThreadingMixIn
 import sys
 import sqlite3
 import select
+from tkinter import *
+
+
+class Fen_Serv(Tk):
+
+    def __init__(self)-> None:
+        Tk.__init__(self)
+        # déclaration
+        self.__lbl_txt: Label
+        self.__lbl_value: Label
+        self.__btn_actualise: Button
+
+        self.__fen = Frame
+        
+        # instanciation / initialisation
+        self.title("fenetre principale")
+
+        self.geometry("650x500")
+        self.resizable(False,False)
+
+
+        self.__fen = Frame(self, borderwidth=3, relief= "groove",padx=1,pady=1)
+        self.__lbl_txt = Label(self.__fen, text="BDD du serveur client et numéro :")
+        self.__lbl_value = Label(self.__fen, text="Actualiser une premiere fois")
+        self.__btn_actualise = Button(self.__fen,text="Actualiser", command=self.actualiser,width=15)
+
+
+
+        # ajout des widgets
+
+        self.__fen.pack(expand=1)
+        self.__lbl_txt.pack(pady=1)
+        self.__lbl_value.pack(pady = 3)
+        self.__btn_actualise.pack(pady=4)
+        
+
+    def actualiser(self):
+        conn = sqlite3.connect('bdd_client.sqlite')
+        cur = conn.cursor()
+        cur.execute('SELECT * from Utilisateurs')
+        res = cur.fetchall()
+        self.__lbl_value["text"] = res
+        conn.close()
+
 
 class ServeurTel:
     # constructeur
@@ -57,7 +101,6 @@ class ServiceEchange:
         while not fin_echange:
 			# On lit la commande
             msg_client = self.recevoir()
-            print(msg_client)
 
             try:
                 variables = msg_client.split(":")
@@ -69,7 +112,6 @@ class ServiceEchange:
             except:
                 bonfrormat = False
 
-            print(mot_cle)
             #Renvoie un message au client si pas bon
             if mot_cle == "CHERCHER":
                 if bonfrormat == False or longeur != 3:
@@ -79,7 +121,6 @@ class ServiceEchange:
                 #Si bon format ajoute le tel dans la bdd avec l'@ de connexion
                 else:	
                     msg_serveur = "Ajout du tel"
-                    print(self.__socket_client)
                     try:
                         ip = self.__socket_client.getpeername()
                         ip = ip[0]
@@ -90,7 +131,6 @@ class ServiceEchange:
                         try:
                             res = res[0]
                             res = res[0]
-                            print(res)
                             print("Le numéro lié est: ", res)
                         except:
                             res = res
@@ -113,8 +153,6 @@ class ServiceEchange:
                             msg_serveur = msg_serveur + res
                             fin_echange = True
 
-                            print("La connexion SQLite est fermée")
-
 
                     except sqlite3.Error as error:
                         print("Erreur lors de la connexion à SQLite", error)
@@ -131,28 +169,26 @@ class ServiceEchange:
                         msg_client = str(msg_client)
                         conn = sqlite3.connect('bdd_client.sqlite')
                         cur = conn.cursor()
-                        print("Base de données crée et correctement connectée à SQLite")
+                        print("Connectée BDD SQLite")
                         cur.execute("""SELECT IP from Utilisateurs where num LIKE ?""",(msg_client,))
                         res = cur.fetchall()
-                        print(res)
                         try:
                             res = res[0]
                             res = res[0]
-                            print(res)
                             print("L'IP appeler est: ", res)
                         except:
                             res = res
                         
                         #Quand l'@IP du client n'est pas encore crée nous l'ajoutons dans la bdd
                         if res == []:
-                            print("Utilisateurs pas encore enregistré")
+                            print("Utilisateur pas encore enregistré")
                             msg_serveur = 'non existant'
                             fin_echange = True
 
 
                         #Quand le champs IP de la base de donné avec l'@ip du client est dejà crée :
                         else:
-                            print("On peut appeler le num")
+                            print("Le numéro est disponible")
                             msg_serveur = 'existant: '
                             res = str(res)
                             msg_serveur = msg_serveur + res
@@ -172,6 +208,17 @@ class ServiceEchange:
         return msg_serveur
 
 
+class Affichage_Serv(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+ 
+    def run(self):
+        self.window=Fen_Serv()
+        self.window.mainloop()
+ 
+    def stop(self):
+        self.window.destroy()
+
 
 
 if __name__ == "__main__":
@@ -190,5 +237,7 @@ if __name__ == "__main__":
     cur.execute("DELETE FROM 'Utilisateurs'")
     conn.commit()
 
+    affichage=Affichage_Serv()
+    affichage.start()
     serveurtel = ServeurTel(port_ecoute)
     serveurtel.attenteClient()

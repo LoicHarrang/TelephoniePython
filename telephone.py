@@ -29,7 +29,6 @@ def appel1():
     
     p = pyaudio.PyAudio()
     connexion = True
-    print("Le chat vocal va commencer")
 
     global receive_stream
     global send_stream

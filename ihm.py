@@ -4,7 +4,6 @@ import pyaudio
 from threading import Thread
 from connexion import ClientTel
 from telephone import appel1
-import time
 from timeit import default_timer
 import select
 import ctypes
@@ -128,7 +127,7 @@ class Fen_Principale(Tk):
                 else:
                     existant : str = "Votre IP est déja associé au numéro : "
                     num = tel[-3:]
-                    self.__lbl_erreur["fg"]="red"
+                    self.__lbl_erreur["fg"]="green"
                     existant = existant + num
                     self.__lbl_erreur.config(text=existant)
                     self.__btn_tel["state"] = DISABLED 
@@ -143,7 +142,6 @@ class Fen_Principale(Tk):
         self.__Client = ClientTel(self.__ipserveur,self.__portserveur)
         qui_appeler = self.__ent_apll.get()
         ip_destinataire = self.__Client.destinataire(qui_appeler)
-        print(ip_destinataire)
         if ip_destinataire == "non existant":
             self.__lbl_appll2["fg"]="red"
             self.__lbl_appll2["text"]="Vous devez joindre un numéro existant"
@@ -183,7 +181,6 @@ def appel(ip):
 
     p = pyaudio.PyAudio()
     connexion = True
-    print("Le chat vocal va commencer")
 
     global receive_stream
     global send_stream
@@ -335,7 +332,7 @@ class ChatServer:
 
         self.CONNECTION_LIST.append(self.chat_server_socket)
 
-        print ("Server Started!")
+        print ("Serveur en attente d'appel")
 
     def broadcast(self, sock, data):
         for current_socket in self.CONNECTION_LIST:
@@ -354,12 +351,12 @@ class ChatServer:
                 if current_socket is self.chat_server_socket:
                     (new_socket, address) = self.chat_server_socket.accept()
                     self.CONNECTION_LIST.append(new_socket)
-                    print("connected to the server")
                 else:
                     try:
                         data = current_socket.recv(1024)
                         self.broadcast(current_socket, data)
                     except socket.error:
+                        affiche = 0
                         print("left the server")
                         current_socket.close()
                         self.CONNECTION_LIST.remove(current_socket)
