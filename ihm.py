@@ -3,8 +3,10 @@ import socket
 import pyaudio
 from threading import Thread
 from connexion import ClientTel
-from connexion import ChatServer
 from telephone import appel1
+import time
+from timeit import default_timer
+import select
 
 class Fen_Principale(Tk):
 
@@ -152,11 +154,7 @@ class Fen_Principale(Tk):
             print("Pour appeler vous aller communiquer avec l'ip :",ip_destinataire)
             self.__lbl_appll2["fg"]="black"
             appel(ip_destinataire)
-
-            """
-            except:
-                self.__btn_apll["state"] = NORMAL
-            """
+            self.__btn_apll["state"] = NORMAL
 
 
 def appel(ip):
@@ -215,8 +213,6 @@ def send_data():
             pass
                 
 
-
-
 class Fen_Config(Toplevel):
 
     def __init__(self, fp: Fen_Principale)-> None:
@@ -274,6 +270,95 @@ class Fen_Config(Toplevel):
         self.socket_appel : float = f'"{self.__entree_adr.get()}",{self.__entree_port.get()}'
         return self.socket_appel
 
+
+class Fen_appel(Toplevel):
+
+    def __init__(self, fp: Fen_Principale)-> None:
+
+        Toplevel.__init__(self)
+        self.__fp = fp
+        self.title("fenetre appel")
+
+        self.geometry("400x300")
+        self.resizable(False,False)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
+        self.canva = Canvas(self, width = 300, height = 400)
+        self.canva.pack(padx=10,pady=10)
+        self.__btn_raccrocher: Button
+
+        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red", command=self.raccrocher)
+
+        def updateTime():
+            now = default_timer() - start
+            minutes, seconds = divmod(now, 60)
+            hours, minutes = divmod(minutes, 60)
+            str_time = "%d:%02d:%02d" % (hours, minutes, seconds)
+            self.canva.itemconfigure(text_clock, text=str_time)
+            self.after(1000, updateTime)
+
+        self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
+        start = default_timer()
+        text_clock = self.canva.create_text(155,40,justify='center', font = 'Helvetica 24')
+        updateTime()
+        self.canva.create_window(153,225, window=self.__btn_raccrocher)
+
+    def raccrocher(self):
+        self.destroy()
+        raccroche()
+
+def raccroche():
+    global fermeture_port
+    global accept_appel
+    accept_appel = False
+    fermeture_port = True
+                
+
+
+class ChatServer:
+    def __init__(self):
+        print("en ecoute port 6000")
+        self.CONNECTION_LIST = []
+        self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.chat_server_socket.bind(("",6000))
+        self.chat_server_socket.listen(1)
+
+        self.CONNECTION_LIST.append(self.chat_server_socket)
+
+        print ("Server Started!")
+
+    def broadcast(self, sock, data):
+        for current_socket in self.CONNECTION_LIST:
+            if current_socket != self.chat_server_socket and current_socket != sock:
+                try:
+                    affichage = 1
+                    current_socket.send(data)
+                except:
+                    pass
+
+    def run(self):
+        
+        while True:
+            rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
+
+            for current_socket in rlist:
+
+
+                if current_socket is self.chat_server_socket and affichage == 1:
+                    (new_socket, address) = self.chat_server_socket.accept()
+                    self.CONNECTION_LIST.append(new_socket)
+                    print("connected to the server")
+                else:
+                    try:
+                        data = current_socket.recv(1024)
+                        self.broadcast(current_socket, data)
+                    except socket.error:
+                        print("left the server")
+                        current_socket.close()
+                        self.CONNECTION_LIST.remove(current_socket)
+
+
 class Affichage(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -286,13 +371,6 @@ class Affichage(Thread):
  
     def stop(self):
         self.window.destroy()
-
-class Tel(Thread):
-    def __init__(self):
-        Thread.__init__(self)
- 
-    def run(self):
-        ChatServer().run()
 
 class Tel(Thread):
     def __init__(self):
@@ -321,4 +399,4 @@ if __name__ == "__main__":
         except:
             pass
     except:
-        print("erreur dans le programme")
+        print("Erreur dans le programme")
