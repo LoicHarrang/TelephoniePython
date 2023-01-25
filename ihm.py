@@ -25,9 +25,10 @@ class Fen_Principale(Tk):
 
         self.geometry("650x500")
         self.resizable(False,False)
-        #self.backgroundImage=PhotoImage(file="wallpaper.png")
-        #self.backgroundImageLabel = Label(self,image = self.backgroundImage)
-        #self.backgroundImageLabel.place(x=0,y=0)
+        self.backgroundImage=PhotoImage(file="wallpaper.png")
+        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
+        self.backgroundImageLabel.place(x=0,y=0)
+
 
         self.__fen = Frame(self, borderwidth=3, relief= "groove",padx=1,pady=1)
         self.__adr_port_init = "ADRESSE DU SERVEUR : xxx.xxx.xxx.xxx : xxx"
