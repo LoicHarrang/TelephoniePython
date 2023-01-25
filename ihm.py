@@ -271,54 +271,10 @@ class Fen_Config(Toplevel):
         return self.socket_appel
 
 
-class Fen_appel(Toplevel):
-
-    def __init__(self, fp: Fen_Principale)-> None:
-
-        Toplevel.__init__(self)
-        self.__fp = fp
-        self.title("fenetre appel")
-
-        self.geometry("400x300")
-        self.resizable(False,False)
-        self.backgroundImage=PhotoImage(file="wallpaper.png")
-        self.backgroundImageLabel = Label(self,image = self.backgroundImage)
-        self.backgroundImageLabel.place(x=0,y=0)
-        self.canva = Canvas(self, width = 300, height = 400)
-        self.canva.pack(padx=10,pady=10)
-        self.__btn_raccrocher: Button
-
-        self.__btn_raccrocher = Button(self.canva, text= "RACCROCHER", width=15, bg="red", command=self.raccrocher)
-
-        def updateTime():
-            now = default_timer() - start
-            minutes, seconds = divmod(now, 60)
-            hours, minutes = divmod(minutes, 60)
-            str_time = "%d:%02d:%02d" % (hours, minutes, seconds)
-            self.canva.itemconfigure(text_clock, text=str_time)
-            self.after(1000, updateTime)
-
-        self.__fen = Frame(self, borderwidth=3, relief= "groove", padx=10, pady=10)
-        start = default_timer()
-        text_clock = self.canva.create_text(155,40,justify='center', font = 'Helvetica 24')
-        updateTime()
-        self.canva.create_window(153,225, window=self.__btn_raccrocher)
-
-    def raccrocher(self):
-        self.destroy()
-        raccroche()
-
-def raccroche():
-    global fermeture_port
-    global accept_appel
-    accept_appel = False
-    fermeture_port = True
-                
-
 
 class ChatServer:
     def __init__(self):
-        print("en ecoute port 6000")
+
         self.CONNECTION_LIST = []
         self.chat_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.chat_server_socket.bind(("",6000))
@@ -332,20 +288,16 @@ class ChatServer:
         for current_socket in self.CONNECTION_LIST:
             if current_socket != self.chat_server_socket and current_socket != sock:
                 try:
-                    affichage = 1
                     current_socket.send(data)
                 except:
                     pass
 
     def run(self):
-        
         while True:
             rlist, wlist, xlist = select.select(self.CONNECTION_LIST, [], [])
 
             for current_socket in rlist:
-
-
-                if current_socket is self.chat_server_socket and affichage == 1:
+                if current_socket is self.chat_server_socket:
                     (new_socket, address) = self.chat_server_socket.accept()
                     self.CONNECTION_LIST.append(new_socket)
                     print("connected to the server")
@@ -362,7 +314,6 @@ class ChatServer:
 class Affichage(Thread):
     def __init__(self):
         Thread.__init__(self)
-        #ici ça ne marchera pas self.window=GUIInterface()
  
     def run(self):
         #là ça marche
