@@ -37,11 +37,14 @@ def appel1():
     send_stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
     if connexion == True: # Démarrage et execution des Threads
+    if connexion == True: # Démarrage et execution des Threads
         thread_ecoute.start()
         thread_enregistrer.start()
         thread_ecoute.join()
         thread_enregistrer.join()
 
+
+def receive_data():  # Fonction receive_data() qui permet de récuperer et lire des données
 
 def receive_data():  # Fonction receive_data() qui permet de récuperer et lire des données
     while True:
@@ -54,8 +57,11 @@ def receive_data():  # Fonction receive_data() qui permet de récuperer et lire 
 
 
 def send_data():  # Fonction send_data() qui permet d'enregistrer et d'envoyer des données
+def send_data():  # Fonction send_data() qui permet d'enregistrer et d'envoyer des données
     while True:
         try:
+            data = send_stream.read(CHUNK)  # Enregistre depuis le micro de l'ordinateur
+            s.sendall(data)  # Envoie les données enregistré dans le réseau via TCP
             data = send_stream.read(CHUNK)  # Enregistre depuis le micro de l'ordinateur
             s.sendall(data)  # Envoie les données enregistré dans le réseau via TCP
         except:
