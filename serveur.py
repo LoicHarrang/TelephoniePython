@@ -138,7 +138,7 @@ class ServiceEchange:
                         #Quand l'@IP du client n'est pas encore crée nous l'ajoutons dans la bdd
                         if res == []:
                             print("Utilisateurs pas encore enregistré")
-                            #FAIRE LE INSERT 
+                            #FAIRE LE INSERT
                             cur.execute("""INSERT Into Utilisateurs (IP,num) VALUES (?,?)""",(ip,msg_client))
                             msg_serveur = 'ajoute'
                             conn.commit()

@@ -10,7 +10,7 @@ import ctypes
 
 
 class Fen_Principale(Tk):
-
+    
     def __init__(self)-> None:
         Tk.__init__(self)
         # déclaration
